@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AttendIT</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="icon" type="image/png" sizes="32x32" href="./imgs/logo.png" />
+    <link rel="shortcut icon" type="image/png" href="./imgs/logo.png" />
+    <link rel="apple-touch-icon" href="./imgs/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  </head>
+  <body>
+    <!-- ==================== AUTH PAGE ==================== -->
+    <div id="auth-page" class="page active">
+      <div class="auth-container">
+        <div class="auth-brand">
+          <div class="brand-icon">
+            <img src="./imgs/logo.png" alt="AttendIT logo" class="brand-logo" />
+          </div>
+          <h1>AttendIT</h1>
+          <p class="brand-tagline">Smart QR Attendance System</p>
+        </div>
+
+        <div class="auth-card">
+          <div class="auth-tabs">
+            <button class="auth-tab active" data-tab="login">Sign In</button>
+            <button class="auth-tab" data-tab="register">Sign Up</button>
+          </div>
+
+          <!-- LOGIN FORM -->
+          <form id="login-form" class="auth-form active">
+            <div class="form-group">
+              <label for="login-email">Email</label>
+              <div class="input-wrapper">
+                <i class="fas fa-envelope"></i>
+                <input
+                  type="email"
+                  id="login-email"
+                  placeholder="Enter your email"
+                  required
+                />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="login-password">Password</label>
+              <div class="input-wrapper">
+                <i class="fas fa-lock"></i>
+                <input
+                  type="password"
+                  id="login-password"
+                  placeholder="Enter your password"
+                  required
+                />
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-full">
+              <i class="fas fa-sign-in-alt"></i> Sign In
+            </button>
+            <div id="login-error" class="form-error"></div>
+          </form>
+
+          <!-- REGISTER FORM -->
+          <form id="register-form" class="auth-form">
+            <div class="form-group">
+              <label for="reg-name">Full Name</label>
+              <div class="input-wrapper">
+                <i class="fas fa-user"></i>
+                <input
+                  type="text"
+                  id="reg-name"
+                  placeholder="Enter your full name"
+                  required
+                />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="reg-email">Email</label>
+              <div class="input-wrapper">
+                <i class="fas fa-envelope"></i>
+                <input
+                  type="email"
+                  id="reg-email"
+                  placeholder="Enter your email"
+                  required
+                />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="reg-student-id">Student / Employee ID</label>
+              <div class="input-wrapper">
+                <i class="fas fa-id-badge"></i>
+                <input
+                  type="text"
+                  id="reg-student-id"
+                  placeholder="Enter your ID number"
+                  required
+                />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="reg-role">Role</label>
+              <div class="input-wrapper">
+                <i class="fas fa-users-cog"></i>
+                <select id="reg-role" required>
+                  <option value="student">Student</option>
+                  <option value="instructor">Instructor</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group" id="reg-grade-group">
+              <label for="reg-grade">Grade</label>
+              <div class="input-wrapper">
+                <i class="fas fa-layer-group"></i>
+                <select id="reg-grade" required>
+                  <option value="">Select grade</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group" id="reg-section-group">
+              <label for="reg-section">Section</label>
+              <div class="input-wrapper">
+                <i class="fas fa-object-group"></i>
+                <select id="reg-section" required>
+                  <option value="">Select section</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="reg-password">Password</label>
+              <div class="input-wrapper">
+                <i class="fas fa-lock"></i>
+                <input
+                  type="password"
+                  id="reg-password"
+                  placeholder="Min 6 characters"
+                  required
+                  minlength="6"
+                />
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-full">
+              <i class="fas fa-user-plus"></i> Create Account
+            </button>
+            <div id="register-error" class="form-error"></div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== INSTRUCTOR DASHBOARD ==================== -->
+    <div id="instructor-page" class="page">
+      <nav class="sidebar">
+        <div class="sidebar-brand">
+          <i class="fas fa-qrcode"></i>
+          <span>AttendIT</span>
+        </div>
+        <ul class="sidebar-nav">
+          <li class="nav-item active" data-section="inst-dashboard">
+            <i class="fas fa-th-large"></i><span>Dashboard</span>
+          </li>
+          <li class="nav-item" data-section="inst-subjects">
+            <i class="fas fa-book"></i><span>Subjects</span>
+          </li>
+          <li class="nav-item" data-section="inst-approvals">
+            <i class="fas fa-user-check"></i><span>Approvals</span>
+          </li>
+          <li class="nav-item" data-section="inst-sessions">
+            <i class="fas fa-calendar-plus"></i><span>Sessions</span>
+          </li>
+          <li class="nav-item" data-section="inst-monitor">
+            <i class="fas fa-desktop"></i><span>Monitor</span>
+          </li>
+          <li class="nav-item" data-section="inst-reports">
+            <i class="fas fa-chart-bar"></i><span>Reports</span>
+          </li>
+        </ul>
+        <div class="sidebar-footer">
+          <div class="user-info">
+            <div class="user-avatar"><i class="fas fa-user"></i></div>
+            <div class="user-details">
+              <span id="inst-user-name" class="user-name">Instructor</span>
+              <span class="user-role">Instructor</span>
+            </div>
+          </div>
+          <button id="inst-logout" class="btn-logout">
+            <i class="fas fa-sign-out-alt"></i>
+          </button>
+        </div>
+      </nav>
+
+      <main class="main-content">
+        <!-- Dashboard Section -->
+        <section id="inst-dashboard" class="content-section active">
+          <div class="section-header">
+            <h2>Dashboard</h2>
+            <p class="section-subtitle">Overview of your attendance system</p>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon blue"><i class="fas fa-book"></i></div>
+              <div class="stat-info">
+                <span class="stat-value" id="stat-subjects">0</span>
+                <span class="stat-label">Subjects</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon green">
+                <i class="fas fa-calendar-check"></i>
+              </div>
+              <div class="stat-info">
+                <span class="stat-value" id="stat-sessions">0</span>
+                <span class="stat-label">Sessions Today</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon purple"><i class="fas fa-users"></i></div>
+              <div class="stat-info">
+                <span class="stat-value" id="stat-students">0</span>
+                <span class="stat-label">Students Enrolled</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon orange">
+                <i class="fas fa-exclamation-triangle"></i>
+              </div>
+              <div class="stat-info">
+                <span class="stat-value" id="stat-at-risk">0</span>
+                <span class="stat-label">At-Risk Students</span>
+              </div>
+            </div>
+          </div>
+          <div class="card mt-24">
+            <div class="card-header">
+              <h3>Recent Activity</h3>
+            </div>
+            <div class="card-body" id="inst-recent-activity">
+              <p class="empty-state">No recent activity</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Subjects Section -->
+        <section id="inst-subjects" class="content-section">
+          <div class="section-header">
+            <h2>Subjects</h2>
+            <button class="btn btn-primary" id="btn-add-subject">
+              <i class="fas fa-plus"></i> Add Subject
+            </button>
+          </div>
+          <div id="subjects-list" class="cards-grid">
+            <p class="empty-state">No subjects created yet</p>
+          </div>
+        </section>
+
+        <!-- Approvals Section -->
+        <section id="inst-approvals" class="content-section">
+          <div class="section-header">
+            <h2>Student Sign Up Approvals</h2>
+            <p class="section-subtitle">
+              Approve students based on their grade and section
+            </p>
+          </div>
+          <div class="card">
+            <div class="card-body">
+              <table class="data-table" id="approval-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Student ID</th>
+                    <th>Email</th>
+                    <th>Grade</th>
+                    <th>Section</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="approval-tbody">
+                  <tr>
+                    <td colspan="7" style="text-align: center; opacity: 0.6">
+                      No pending signups
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Sessions Section -->
+        <section id="inst-sessions" class="content-section">
+          <div class="section-header">
+            <h2>Attendance Sessions</h2>
+            <button class="btn btn-primary" id="btn-create-session">
+              <i class="fas fa-plus"></i> New Session
+            </button>
+          </div>
+          <div id="sessions-list" class="table-container">
+            <p class="empty-state">No sessions yet</p>
+          </div>
+        </section>
+
+        <!-- Monitor Section -->
+        <section id="inst-monitor" class="content-section">
+          <div class="section-header">
+            <h2>Live Attendance Monitor</h2>
+          </div>
+          <div class="monitor-controls">
+            <select id="monitor-session-select" class="form-select">
+              <option value="">Select an active session</option>
+            </select>
+          </div>
+          <div id="qr-display-area" class="qr-area" style="display: none">
+            <div class="qr-card">
+              <h3 id="qr-session-title">Session QR Code</h3>
+              <div id="qr-code-container"></div>
+              <p class="qr-timer">
+                Refreshes in <span id="qr-countdown">30</span>s
+              </p>
+              <p class="qr-session-info" id="qr-session-info"></p>
+            </div>
+          </div>
+          <div class="card mt-24">
+            <div class="card-header">
+              <h3>Live Attendance</h3>
+              <span class="badge" id="monitor-count">0 present</span>
+            </div>
+            <div class="card-body">
+              <table class="data-table" id="monitor-table">
+                <thead>
+                  <tr>
+                    <th>Student ID</th>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Time</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="monitor-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Reports Section -->
+        <section id="inst-reports" class="content-section">
+          <div class="section-header">
+            <h2>Reports & Analytics</h2>
+          </div>
+          <div class="filter-bar">
+            <select id="report-subject-filter" class="form-select">
+              <option value="">All Subjects</option>
+            </select>
+            <input type="date" id="report-date-from" class="form-input" />
+            <input type="date" id="report-date-to" class="form-input" />
+            <button class="btn btn-secondary" id="btn-generate-report">
+              <i class="fas fa-sync"></i> Generate
+            </button>
+            <button class="btn btn-secondary" id="btn-export-pdf">
+              <i class="fas fa-file-pdf"></i> PDF
+            </button>
+            <button class="btn btn-secondary" id="btn-export-excel">
+              <i class="fas fa-file-excel"></i> Excel
+            </button>
+          </div>
+          <div class="card mt-24">
+            <div class="card-header"><h3>Attendance Summary</h3></div>
+            <div class="card-body">
+              <table class="data-table" id="report-table">
+                <thead>
+                  <tr>
+                    <th>Student ID</th>
+                    <th>Name</th>
+                    <th>Present</th>
+                    <th>Late</th>
+                    <th>Absent</th>
+                    <th>Percentage</th>
+                    <th>Risk Level</th>
+                  </tr>
+                </thead>
+                <tbody id="report-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- ==================== STUDENT DASHBOARD ==================== -->
+    <div id="student-page" class="page">
+      <nav class="sidebar">
+        <div class="sidebar-brand">
+          <i class="fas fa-qrcode"></i>
+          <span>AttendIT</span>
+        </div>
+        <ul class="sidebar-nav">
+          <li class="nav-item active" data-section="stu-dashboard">
+            <i class="fas fa-th-large"></i><span>Dashboard</span>
+          </li>
+          <li class="nav-item" data-section="stu-scan">
+            <i class="fas fa-camera"></i><span>Scan QR</span>
+          </li>
+          <li class="nav-item" data-section="stu-history">
+            <i class="fas fa-history"></i><span>History</span>
+          </li>
+        </ul>
+        <div class="sidebar-footer">
+          <div class="user-info">
+            <div class="user-avatar"><i class="fas fa-user-graduate"></i></div>
+            <div class="user-details">
+              <span id="stu-user-name" class="user-name">Student</span>
+              <span class="user-role">Student</span>
+            </div>
+          </div>
+          <button id="stu-logout" class="btn-logout">
+            <i class="fas fa-sign-out-alt"></i>
+          </button>
+        </div>
+      </nav>
+
+      <main class="main-content">
+        <!-- Student Dashboard -->
+        <section id="stu-dashboard" class="content-section active">
+          <div class="section-header">
+            <h2>My Dashboard</h2>
+            <p class="section-subtitle">Your attendance overview</p>
+          </div>
+
+          <div class="card" id="stu-approval-card" style="display: none">
+            <div class="card-body">
+              <div
+                class="student-approval-message"
+                id="stu-approval-message"
+              ></div>
+            </div>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon green">
+                <i class="fas fa-check-circle"></i>
+              </div>
+              <div class="stat-info">
+                <span class="stat-value" id="stu-stat-present">0</span>
+                <span class="stat-label">Present</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon orange"><i class="fas fa-clock"></i></div>
+              <div class="stat-info">
+                <span class="stat-value" id="stu-stat-late">0</span>
+                <span class="stat-label">Late</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon red">
+                <i class="fas fa-times-circle"></i>
+              </div>
+              <div class="stat-info">
+                <span class="stat-value" id="stu-stat-absent">0</span>
+                <span class="stat-label">Absent</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon blue">
+                <i class="fas fa-percentage"></i>
+              </div>
+              <div class="stat-info">
+                <span class="stat-value" id="stu-stat-percentage">0%</span>
+                <span class="stat-label">Attendance Rate</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card mt-24">
+            <div class="card-header"><h3>Enrolled Subjects</h3></div>
+            <div class="card-body" id="stu-subjects-summary">
+              <p class="empty-state">No subjects found</p>
+            </div>
+          </div>
+
+          <div class="card mt-24">
+            <div class="card-header"><h3>My Schedule</h3></div>
+            <div class="card-body" id="stu-schedule-summary">
+              <p class="empty-state">No schedule available</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- QR Scanner Section -->
+        <section id="stu-scan" class="content-section">
+          <div class="section-header">
+            <h2>Scan QR Code</h2>
+            <p class="section-subtitle">
+              Point your camera at the attendance QR code displayed by your
+              instructor
+            </p>
+          </div>
+          <div class="scanner-container">
+            <div id="qr-reader" class="qr-reader"></div>
+            <div id="scan-result" class="scan-result" style="display: none">
+              <i class="fas fa-check-circle"></i>
+              <p id="scan-message"></p>
+              <button class="btn btn-primary mt-8" onclick="window.appRescan()">
+                <i class="fas fa-redo"></i> Scan Again
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- History Section -->
+        <section id="stu-history" class="content-section">
+          <div class="section-header">
+            <h2>Attendance History</h2>
+          </div>
+          <div class="filter-bar">
+            <select id="history-subject-filter" class="form-select">
+              <option value="">All Subjects</option>
+            </select>
+            <select id="history-status-filter" class="form-select">
+              <option value="">All Status</option>
+              <option value="present">Present</option>
+              <option value="late">Late</option>
+              <option value="absent">Absent</option>
+            </select>
+          </div>
+          <div class="card mt-24">
+            <div class="card-body">
+              <table class="data-table" id="history-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Subject</th>
+                    <th>Status</th>
+                    <th>Time</th>
+                  </tr>
+                </thead>
+                <tbody id="history-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- ==================== MODALS ==================== -->
+    <div id="modal-overlay" class="modal-overlay">
+      <div class="modal" id="modal-container">
+        <div class="modal-header">
+          <h3 id="modal-title">Modal</h3>
+          <button class="modal-close" id="modal-close">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body" id="modal-body"></div>
+      </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script type="module" src="./js/app.js"></script>
+  </body>
+</html>
