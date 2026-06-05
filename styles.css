@@ -1063,6 +1063,9 @@ body {
 .mt-8 {
   margin-top: 8px;
 }
+.mt-16 {
+  margin-top: 16px;
+}
 .action-btns {
   display: flex;
   gap: 4px;
@@ -1150,4 +1153,402 @@ body {
   margin-top: 8px;
   font-size: 12px;
   color: var(--text-secondary);
+}
+
+/* ========== ADMIN SECTION MANAGEMENT ========== */
+.admin-section-layout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.admin-panel {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.inline-form {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.inline-form .form-input {
+  flex: 1;
+  min-width: 0;
+}
+.admin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.admin-list-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+}
+.admin-list-row > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.admin-list-row strong {
+  font-size: 14px;
+}
+.admin-list-row span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.grade-assignment-card {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+.grade-assignment-card:first-child {
+  padding-top: 0;
+}
+.grade-assignment-card:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+.grade-assignment-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+.grade-assignment-header h4 {
+  font-size: 15px;
+  font-weight: 600;
+}
+.grade-assignment-header p {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 8px;
+}
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-size: 13px;
+  cursor: pointer;
+}
+.checkbox-row input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary);
+}
+
+@media (max-width: 768px) {
+  .admin-section-layout {
+    grid-template-columns: 1fr;
+  }
+  .inline-form {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .inline-form .btn {
+    justify-content: center;
+  }
+  .admin-list-row,
+  .grade-assignment-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .admin-list-row .action-btns {
+    justify-content: flex-start;
+  }
+}
+
+/* ========== INSTRUCTOR APPROVALS TAB ========== */
+.approval-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.approval-block {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.approval-block:hover {
+  box-shadow: var(--shadow);
+}
+
+.approval-block-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.02) 0%, rgba(99, 102, 241, 0.02) 100%);
+}
+
+.approval-block-header h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.approval-block-header h3 i {
+  color: var(--primary);
+  font-size: 18px;
+}
+
+.approval-block-header p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  font-weight: 400;
+}
+
+.approval-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.approval-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  transition: background-color var(--transition), transform var(--transition);
+}
+
+.approval-row:last-child {
+  border-bottom: none;
+}
+
+.approval-row:hover {
+  background-color: rgba(79, 70, 229, 0.015);
+}
+
+.approval-student {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex: 1;
+}
+
+.student-avatar-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(99, 102, 241, 0.1));
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.student-avatar-badge.compact {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.student-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.student-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.student-info-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 2px;
+}
+
+.student-info-meta .meta-item {
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.student-info-meta .meta-item i {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.student-tags {
+  display: flex;
+  gap: 8px;
+}
+
+.tag-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.tag-new {
+  background: var(--orange-light);
+  color: var(--orange);
+}
+
+.tag-existing {
+  background: var(--blue-light);
+  color: var(--blue);
+}
+
+/* Subject Approval Card Grid */
+.subject-approval-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 20px;
+  padding: 24px;
+  background: #fafbfe;
+  border-top: 1px solid var(--border);
+}
+
+.subject-approval-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: transform var(--transition), box-shadow var(--transition);
+  display: flex;
+  flex-direction: column;
+}
+
+.subject-approval-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+.subject-approval-card-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(to right, rgba(79, 70, 229, 0.01) 0%, rgba(99, 102, 241, 0.01) 100%);
+}
+
+.subject-approval-card-header h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.subject-approval-card-header p {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.approval-list.compact .approval-row {
+  padding: 12px 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.approval-list.compact .approval-student {
+  gap: 12px;
+}
+
+.approval-list .empty-state-sm {
+  padding: 40px 24px;
+  text-align: center;
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: var(--surface);
+  border: none;
+}
+
+.approval-list .empty-state-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--green-light);
+  color: var(--green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.subject-approval-card .approval-list .empty-state-sm {
+  padding: 24px;
+  font-size: 12px;
+}
+
+.subject-approval-card .approval-list .empty-state-icon {
+  width: 36px;
+  height: 36px;
+  font-size: 16px;
+}
+
+/* Button design enhancements for approvals */
+.action-btns .btn-approve {
+  background: var(--green);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.2);
+}
+
+.action-btns .btn-approve:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
+.action-btns .btn-reject {
+  background: var(--red-light);
+  color: var(--red);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+}
+
+.action-btns .btn-reject:hover {
+  background: var(--red);
+  color: #fff;
+  border-color: transparent;
+  transform: translateY(-1px);
 }

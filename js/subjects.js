@@ -20,12 +20,16 @@ function formatAcademicLabel(grade, section) {
   if (!g && !s) return "No grade/section assigned";
   if (!g) return `No grade assigned (section ${s})`;
   if (!s) return `${g} (section missing)`;
-  return `${g} - Section ${s}`;
+  return `${g} - ${s}`;
 }
 
 function populateGradeSelect(selectEl, structure, preferred = "") {
   const grades = getGradeOptions(structure);
   selectEl.innerHTML = '<option value="">Select grade</option>';
+  if (!grades.length) {
+    selectEl.innerHTML = '<option value="">No grade levels configured</option>';
+    return;
+  }
   grades.forEach((grade) => {
     const opt = document.createElement("option");
     opt.value = grade;
@@ -43,6 +47,11 @@ function populateSectionSelect(
 ) {
   const sections = getSectionOptions(structure, grade);
   selectEl.innerHTML = '<option value="">Select section</option>';
+  if (grade && !sections.length) {
+    selectEl.innerHTML =
+      '<option value="">No sections assigned to this grade</option>';
+    return;
+  }
   sections.forEach((section) => {
     const opt = document.createElement("option");
     opt.value = section;
@@ -116,6 +125,23 @@ export function setupSubjectListeners() {
   /* ---- Add Subject ---- */
   $("#btn-add-subject").addEventListener("click", async () => {
     const academicStructure = await fetchAcademicStructure();
+    const gradeOptions = getGradeOptions(academicStructure);
+    const hasAssignedSections = gradeOptions.some(
+      (grade) => getSectionOptions(academicStructure, grade).length > 0,
+    );
+
+    if (!gradeOptions.length || !hasAssignedSections) {
+      openModal(
+        "Academic Structure Required",
+        `
+        <div class="empty-state">
+          <i class="fas fa-layer-group"></i>
+          <p>An admin must create grade levels, global sections, and grade-section assignments before instructors can create subjects.</p>
+        </div>
+      `,
+      );
+      return;
+    }
 
     openModal(
       "Add Subject",
@@ -133,6 +159,11 @@ export function setupSubjectListeners() {
     const gradeSelect = $("#m-subj-grade");
     const sectionSelect = $("#m-subj-section");
     populateGradeSelect(gradeSelect, academicStructure);
+    const defaultGrade =
+      gradeOptions.find(
+        (grade) => getSectionOptions(academicStructure, grade).length > 0,
+      ) || "";
+    gradeSelect.value = defaultGrade;
     populateSectionSelect(sectionSelect, academicStructure, gradeSelect.value);
 
     gradeSelect.addEventListener("change", () => {

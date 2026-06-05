@@ -101,7 +101,7 @@
               </div>
             </div>
             <div class="form-group">
-              <label for="reg-student-id">Student / Employee ID</label>
+              <label for="reg-student-id">School / Employee ID</label>
               <div class="input-wrapper">
                 <i class="fas fa-id-badge"></i>
                 <input
@@ -119,6 +119,7 @@
                 <select id="reg-role" required>
                   <option value="student">Student</option>
                   <option value="instructor">Instructor</option>
+                  <option value="parent">Parent</option>
                 </select>
               </div>
             </div>
@@ -138,6 +139,47 @@
                 <select id="reg-section" required>
                   <option value="">Select section</option>
                 </select>
+              </div>
+            </div>
+            <div class="form-group" id="reg-student-type-group">
+              <label for="reg-student-type">Student Type</label>
+              <div class="input-wrapper">
+                <i class="fas fa-user-tag"></i>
+                <select id="reg-student-type" required>
+                  <option value="">Select student type</option>
+                  <option value="new">New Student</option>
+                  <option value="transferee">Transferee</option>
+                </select>
+              </div>
+            </div>
+            <div
+              class="form-group"
+              id="reg-transfer-from-group"
+              style="display: none"
+            >
+              <label for="reg-transfer-from">Previous School</label>
+              <div class="input-wrapper">
+                <i class="fas fa-school"></i>
+                <input
+                  type="text"
+                  id="reg-transfer-from"
+                  placeholder="Enter previous school"
+                />
+              </div>
+            </div>
+            <div
+              class="form-group"
+              id="reg-parent-link-group"
+              style="display: none"
+            >
+              <label for="reg-parent-link">Child School ID or Invite Code</label>
+              <div class="input-wrapper">
+                <i class="fas fa-link"></i>
+                <input
+                  type="text"
+                  id="reg-parent-link"
+                  placeholder="Enter student ID or invite code"
+                />
               </div>
             </div>
             <div class="form-group">
@@ -160,6 +202,97 @@
           </form>
         </div>
       </div>
+    </div>
+
+    <!-- ==================== ADMIN DASHBOARD ==================== -->
+    <div id="admin-page" class="page">
+      <nav class="sidebar">
+        <div class="sidebar-brand">
+          <i class="fas fa-qrcode"></i>
+          <span>AttendIT</span>
+        </div>
+        <ul class="sidebar-nav">
+          <li class="nav-item active" data-section="admin-sections">
+            <i class="fas fa-layer-group"></i><span>Sections</span>
+          </li>
+        </ul>
+        <div class="sidebar-footer">
+          <div class="user-info">
+            <div class="user-avatar"><i class="fas fa-user-shield"></i></div>
+            <div class="user-details">
+              <span id="admin-user-name" class="user-name">Admin</span>
+              <span class="user-role">Admin</span>
+            </div>
+          </div>
+          <button id="admin-logout" class="btn-logout">
+            <i class="fas fa-sign-out-alt"></i>
+          </button>
+        </div>
+      </nav>
+
+      <main class="main-content">
+        <section id="admin-sections" class="content-section active">
+          <div class="section-header">
+            <h2>Manage Sections</h2>
+            <p class="section-subtitle">
+              Global school grade levels, sections, and grade-section assignments
+            </p>
+          </div>
+
+          <div class="admin-section-layout">
+            <div class="admin-panel">
+              <div class="card-header">
+                <h3>Grade Levels</h3>
+              </div>
+              <div class="card-body">
+                <form id="admin-grade-form" class="inline-form">
+                  <input
+                    type="text"
+                    id="admin-grade-name"
+                    class="form-input"
+                    placeholder="e.g. Grade 7"
+                    required
+                  />
+                  <button class="btn btn-primary" type="submit">
+                    <i class="fas fa-plus"></i> Add
+                  </button>
+                </form>
+                <div id="admin-grade-list" class="admin-list mt-16"></div>
+              </div>
+            </div>
+
+            <div class="admin-panel">
+              <div class="card-header">
+                <h3>Global Sections</h3>
+              </div>
+              <div class="card-body">
+                <form id="admin-section-form" class="inline-form">
+                  <input
+                    type="text"
+                    id="admin-section-name"
+                    class="form-input"
+                    placeholder="e.g. 7A, Section A, STEM 1"
+                    required
+                  />
+                  <button class="btn btn-primary" type="submit">
+                    <i class="fas fa-plus"></i> Add
+                  </button>
+                </form>
+                <div id="admin-section-list" class="admin-list mt-16"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card mt-24">
+            <div class="card-header">
+              <h3>Assign Sections to Grade Levels</h3>
+            </div>
+            <div class="card-body" id="admin-grade-section-list">
+              <p class="empty-state">Create grade levels and sections to start assigning them.</p>
+            </div>
+          </div>
+        </section>
+      </main>
     </div>
 
     <!-- ==================== INSTRUCTOR DASHBOARD ==================== -->
@@ -270,34 +403,13 @@
         <!-- Approvals Section -->
         <section id="inst-approvals" class="content-section">
           <div class="section-header">
-            <h2>Student Sign Up Approvals</h2>
+            <h2>Approvals</h2>
             <p class="section-subtitle">
-              Approve students based on their grade and section
+              Review account requests and subject-level enrollment queues
             </p>
           </div>
-          <div class="card">
-            <div class="card-body">
-              <table class="data-table" id="approval-table">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Student ID</th>
-                    <th>Email</th>
-                    <th>Grade</th>
-                    <th>Section</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="approval-tbody">
-                  <tr>
-                    <td colspan="7" style="text-align: center; opacity: 0.6">
-                      No pending signups
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+          <div id="approval-content" class="approval-content">
+            <p class="empty-state">No pending approvals</p>
           </div>
         </section>
 
@@ -499,6 +611,24 @@
               <p class="empty-state">No schedule available</p>
             </div>
           </div>
+
+          <div class="card mt-24">
+            <div class="card-header"><h3>Parent Access</h3></div>
+            <div class="card-body">
+              <div class="invite-code-panel">
+                <div>
+                  <p class="invite-code-label">Invite code</p>
+                  <p class="invite-code-value" id="stu-invite-code">Not generated</p>
+                  <p class="invite-code-hint">
+                    Share this code with a parent or guardian to link your attendance overview.
+                  </p>
+                </div>
+                <button class="btn btn-secondary" id="btn-generate-invite">
+                  <i class="fas fa-key"></i> Generate
+                </button>
+              </div>
+            </div>
+          </div>
         </section>
 
         <!-- QR Scanner Section -->
@@ -551,6 +681,120 @@
                 </thead>
                 <tbody id="history-tbody"></tbody>
               </table>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- ==================== PARENT DASHBOARD ==================== -->
+    <div id="parent-page" class="page">
+      <nav class="sidebar">
+        <div class="sidebar-brand">
+          <i class="fas fa-qrcode"></i>
+          <span>AttendIT</span>
+        </div>
+        <ul class="sidebar-nav">
+          <li class="nav-item active" data-section="parent-dashboard">
+            <i class="fas fa-th-large"></i><span>Dashboard</span>
+          </li>
+        </ul>
+        <div class="sidebar-footer">
+          <div class="user-info">
+            <div class="user-avatar"><i class="fas fa-user-friends"></i></div>
+            <div class="user-details">
+              <span id="parent-user-name" class="user-name">Parent</span>
+              <span class="user-role">Parent</span>
+            </div>
+          </div>
+          <button id="parent-logout" class="btn-logout">
+            <i class="fas fa-sign-out-alt"></i>
+          </button>
+        </div>
+      </nav>
+
+      <main class="main-content">
+        <section id="parent-dashboard" class="content-section active">
+          <div class="section-header">
+            <h2>Parent Portal</h2>
+            <p class="section-subtitle">Read-only attendance overview for linked children</p>
+          </div>
+
+          <div class="parent-layout">
+            <aside class="parent-child-panel">
+              <div class="panel-header">
+                <h3>Children</h3>
+              </div>
+              <div id="parent-child-list" class="parent-child-list">
+                <p class="empty-state-sm">No linked children yet</p>
+              </div>
+              <div class="parent-link-form">
+                <label for="parent-link-code">Link another child</label>
+                <input
+                  type="text"
+                  id="parent-link-code"
+                  class="form-input"
+                  placeholder="School ID or invite code"
+                />
+                <button class="btn btn-secondary btn-full" id="btn-parent-link-child">
+                  <i class="fas fa-link"></i> Link Child
+                </button>
+              </div>
+            </aside>
+
+            <div class="parent-overview">
+              <div class="card">
+                <div class="card-header">
+                  <h3 id="parent-child-title">Attendance Overview</h3>
+                  <span class="badge" id="parent-child-meta">No child selected</span>
+                </div>
+                <div class="card-body">
+                  <div class="stats-grid compact">
+                    <div class="stat-card">
+                      <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+                      <div class="stat-info">
+                        <span class="stat-value" id="parent-stat-present">0</span>
+                        <span class="stat-label">Present</span>
+                      </div>
+                    </div>
+                    <div class="stat-card">
+                      <div class="stat-icon orange"><i class="fas fa-clock"></i></div>
+                      <div class="stat-info">
+                        <span class="stat-value" id="parent-stat-late">0</span>
+                        <span class="stat-label">Late</span>
+                      </div>
+                    </div>
+                    <div class="stat-card">
+                      <div class="stat-icon red"><i class="fas fa-times-circle"></i></div>
+                      <div class="stat-info">
+                        <span class="stat-value" id="parent-stat-absent">0</span>
+                        <span class="stat-label">Absent</span>
+                      </div>
+                    </div>
+                    <div class="stat-card">
+                      <div class="stat-icon blue"><i class="fas fa-percentage"></i></div>
+                      <div class="stat-info">
+                        <span class="stat-value" id="parent-stat-rate">0%</span>
+                        <span class="stat-label">Attendance Rate</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card mt-24">
+                <div class="card-header"><h3>Recent Sessions</h3></div>
+                <div class="card-body" id="parent-recent-sessions">
+                  <p class="empty-state">Select a child to view attendance</p>
+                </div>
+              </div>
+
+              <div class="card mt-24">
+                <div class="card-header"><h3>Per-Subject Summary</h3></div>
+                <div class="card-body" id="parent-subject-breakdown">
+                  <p class="empty-state">Select a child to view subjects</p>
+                </div>
+              </div>
             </div>
           </div>
         </section>

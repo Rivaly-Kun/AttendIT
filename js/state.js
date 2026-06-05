@@ -6,6 +6,8 @@ const state = {
   currentUser: null,
   currentRole: null,
   currentUserData: null,
+  subjectEnrollments: {},
+  parentLinks: {},
   qrInterval: null,
   html5QrScanner: null,
   monitorUnsub: null,

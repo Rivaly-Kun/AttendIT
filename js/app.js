@@ -18,6 +18,7 @@ import {
 import { loadStats } from "./stats.js";
 import { setupReportListeners } from "./reports.js";
 import { loadPendingApprovals, setupApprovalListeners } from "./approvals.js";
+import { loadAdminSections, setupAdminListeners } from "./admin.js";
 import {
   initStudentDashboard,
   initScanSection,
@@ -32,6 +33,13 @@ function initInstructorDashboard() {
   loadSessions();
   loadStats();
   loadPendingApprovals();
+}
+
+/* ===========================================================
+   ADMIN DASHBOARD INIT
+   =========================================================== */
+function initAdminDashboard() {
+  loadAdminSections();
 }
 
 /* ===========================================================
@@ -68,6 +76,16 @@ $$("#instructor-page .nav-item").forEach((n) => {
 });
 
 /* ===========================================================
+   NAVIGATION - Admin
+   =========================================================== */
+$$("#admin-page .nav-item").forEach((n) => {
+  n.addEventListener("click", () => {
+    showSection(n.dataset.section, $("#admin-page"));
+    if (n.dataset.section === "admin-sections") loadAdminSections();
+  });
+});
+
+/* ===========================================================
    NAVIGATION — Student
    =========================================================== */
 $$("#student-page .nav-item").forEach((n) => {
@@ -97,6 +115,7 @@ setupSessionListeners();
 setupReportListeners();
 setupStudentListeners();
 setupApprovalListeners();
+setupAdminListeners();
 
 /* ===========================================================
    LEGACY API COMPATIBILITY
@@ -114,4 +133,4 @@ window.mgt.clearMarks = (...args) => {
 /* ===========================================================
    AUTHENTICATION (starts the app)
    =========================================================== */
-setupAuth(initInstructorDashboard, initStudentDashboard);
+setupAuth(initInstructorDashboard, initStudentDashboard, initAdminDashboard);

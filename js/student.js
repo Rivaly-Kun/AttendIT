@@ -19,7 +19,7 @@ import state from "./state.js";
 /* ===========================================================
    INIT
    =========================================================== */
-export function initStudentDashboard() {
+export async function initStudentDashboard() {
   window._studentHistoryRows = [];
   window._subjects = {};
 
@@ -90,6 +90,27 @@ function resetStudentDashboardForApprovalState() {
   }
 }
 
+function isCurrentStudentSection(subject) {
+  return (
+    (subject.grade || "") === (state.currentUserData?.grade || "") &&
+    (subject.section || "") === (state.currentUserData?.section || "")
+  );
+}
+
+function subjectEnrollmentBadge(status) {
+  const normalized = (status || "pending").toLowerCase();
+  if (normalized === "approved") {
+    return '<span class="badge badge-safe">Approved</span>';
+  }
+  if (normalized === "rejected") {
+    return '<span class="badge badge-absent">Rejected</span>';
+  }
+  if (normalized === "archived") {
+    return '<span class="badge">Archived</span>';
+  }
+  return '<span class="badge badge-late">Pending</span>';
+}
+
 /* ===========================================================
    STUDENT STATS
    =========================================================== */
@@ -130,26 +151,37 @@ async function loadStudentSubjects() {
 
   if (!subjSnap.exists()) {
     container.innerHTML =
-      '<div class="empty-state"><i class="fas fa-book-open"></i><p>No subjects found.<br>Ask your instructor to enroll you.</p></div>';
+      '<div class="empty-state"><i class="fas fa-book-open"></i><p>No subjects found for your grade and section yet.</p></div>';
     return;
   }
 
   const subjects = subjSnap.val();
+  const subjectEnrollmentSnap = await get(ref(db, "subjectEnrollments"));
+  const subjectEnrollments = subjectEnrollmentSnap.exists()
+    ? subjectEnrollmentSnap.val()
+    : {};
   const attSnap = await get(ref(db, "attendance"));
   const sessSnap = await get(ref(db, "sessions"));
   const sessions = sessSnap.exists() ? sessSnap.val() : {};
-  let enrolledInAny = false;
+  let hasAnySubject = false;
 
   for (const subjId of Object.keys(subjects)) {
-    const enrollSnap = await get(
+    const subj = subjects[subjId];
+    const enrollment = subjectEnrollments?.[subjId]?.[state.currentUser.uid];
+    const legacyEnrollSnap = await get(
       ref(db, `enrollments/${subjId}/${state.currentUser.uid}`),
     );
-    if (!enrollSnap.exists()) continue;
-    enrolledInAny = true;
+    const isRelevant =
+      isCurrentStudentSection(subj) || enrollment || legacyEnrollSnap.exists();
+    if (!isRelevant) continue;
+
+    hasAnySubject = true;
+    const status =
+      enrollment?.status || (legacyEnrollSnap.exists() ? "approved" : "");
 
     let total = 0,
       attended = 0;
-    if (sessSnap.exists() && attSnap.exists()) {
+    if (status === "approved" && sessSnap.exists() && attSnap.exists()) {
       Object.entries(sessions).forEach(([sessId, sess]) => {
         if (sess.subjectId !== subjId) return;
         total++;
@@ -160,30 +192,52 @@ async function loadStudentSubjects() {
     }
 
     const pct = total ? Math.round((attended / total) * 100) : 100;
-    const subj = subjects[subjId];
 
     const row = document.createElement("div");
     row.className = "subject-summary-row";
+    let rightSide = "";
+    if (status === "approved") {
+      rightSide = `<div class="attendance-bar-wrap">
+            <div class="attendance-bar"><div class="attendance-bar-fill" style="width:${pct}%;background:${barColor(pct)}"></div></div>
+            <span class="attendance-pct" style="color:${barColor(pct)}">${pct}%</span>
+          </div>`;
+    } else if (status === "pending") {
+      rightSide = `<div class="attendance-status-wrap">${subjectEnrollmentBadge(status)}</div>`;
+    } else if (status === "rejected") {
+      rightSide = `
+        <div class="attendance-status-wrap subject-request-actions">
+          ${subjectEnrollmentBadge(status)}
+          <button class="btn btn-sm btn-secondary" onclick="window.appRequestSubjectJoin('${subjId}')">
+            <i class="fas fa-redo"></i> Request Again
+          </button>
+        </div>`;
+    } else {
+      rightSide = `
+        <div class="attendance-status-wrap subject-request-actions">
+          <button class="btn btn-sm btn-primary" onclick="window.appRequestSubjectJoin('${subjId}')">
+            <i class="fas fa-paper-plane"></i> Request Join
+          </button>
+        </div>`;
+    }
     row.innerHTML = `
       <div class="subject-summary-left">
         <span class="subject-name">${escHtml(subj.name)}</span>
-        <span class="subject-code">${escHtml(subj.code || "")} &bull; ${escHtml(subj.schedule || "")}</span>
+        <span class="subject-code">${escHtml(subj.code || "")} | ${escHtml(subj.schedule || subj.scheduleTime || "")}</span>
       </div>
-      <div class="attendance-bar-wrap">
-        <div class="attendance-bar"><div class="attendance-bar-fill" style="width:${pct}%;background:${barColor(pct)}"></div></div>
-        <span class="attendance-pct" style="color:${barColor(pct)}">${pct}%</span>
-      </div>`;
+      ${rightSide}`;
     container.appendChild(row);
 
-    const opt = document.createElement("option");
-    opt.value = subjId;
-    opt.textContent = subj.name;
-    histFilter.appendChild(opt);
+    if (status === "approved") {
+      const opt = document.createElement("option");
+      opt.value = subjId;
+      opt.textContent = subj.name;
+      histFilter.appendChild(opt);
+    }
   }
 
-  if (!enrolledInAny)
+  if (!hasAnySubject)
     container.innerHTML =
-      '<div class="empty-state"><i class="fas fa-book-open"></i><p>You are not enrolled in any subjects yet.<br>Ask your instructor to add you.</p></div>';
+      '<div class="empty-state"><i class="fas fa-book-open"></i><p>No subjects match your current grade and section yet.</p></div>';
 }
 
 /* ===========================================================
@@ -202,17 +256,24 @@ async function loadStudentSchedule() {
     return;
   }
 
+  const subjectEnrollmentSnap = await get(ref(db, "subjectEnrollments"));
+  const subjectEnrollments = subjectEnrollmentSnap.exists()
+    ? subjectEnrollmentSnap.val()
+    : {};
   const entries = [];
   for (const [subjId, subj] of Object.entries(subjSnap.val())) {
-    const enrollSnap = await get(
+    const subjectRequest = subjectEnrollments?.[subjId]?.[state.currentUser.uid];
+    const legacyEnrollSnap = await get(
       ref(db, `enrollments/${subjId}/${state.currentUser.uid}`),
     );
-    if (!enrollSnap.exists()) continue;
+    const isApproved =
+      subjectRequest?.status === "approved" || legacyEnrollSnap.exists();
+    if (!isApproved) continue;
 
     entries.push({
       name: subj.name || "Untitled Subject",
       code: subj.code || "",
-      schedule: subj.schedule || "Schedule not set",
+      schedule: subj.schedule || subj.scheduleTime || "Schedule not set",
       grade: subj.grade || state.currentUserData?.grade || "",
       section: subj.section || state.currentUserData?.section || "",
     });
@@ -220,7 +281,7 @@ async function loadStudentSchedule() {
 
   if (!entries.length) {
     container.innerHTML =
-      '<div class="empty-state"><i class="fas fa-calendar-times"></i><p>No schedule available. Ask your teacher to enroll you in your section classes.</p></div>';
+      '<div class="empty-state"><i class="fas fa-calendar-times"></i><p>Your schedule will appear after a teacher approves your class requests.</p></div>';
     return;
   }
 
@@ -475,6 +536,87 @@ export function setupStudentListeners() {
     if (window._studentHistoryRows)
       renderHistoryTable(window._studentHistoryRows, window._subjects || {});
   });
+
+  /* ---- Request to join a subject ---- */
+  window.appRequestSubjectJoin = async (subjectId) => {
+    try {
+      if (!state.currentUser || !state.currentUserData) {
+        toast("You must be logged in to request enrollment.", "error");
+        return;
+      }
+
+      const approvalStatus = state.currentUserData?.approvalStatus || "approved";
+      if (approvalStatus !== "approved") {
+        toast(
+          "Your account must be approved before you can request to join subjects.",
+          "error",
+        );
+        return;
+      }
+
+      /* Check if subject still exists */
+      const subjSnap = await get(ref(db, `subjects/${subjectId}`));
+      if (!subjSnap.exists()) {
+        toast("This subject no longer exists.", "error");
+        return;
+      }
+
+      /* Check for existing enrollment request */
+      const existingSnap = await get(
+        ref(db, `subjectEnrollments/${subjectId}/${state.currentUser.uid}`),
+      );
+      if (existingSnap.exists()) {
+        const existing = existingSnap.val();
+        if (existing.status === "pending") {
+          toast("You already have a pending request for this subject.", "info");
+          return;
+        }
+        if (existing.status === "approved") {
+          toast("You are already enrolled in this subject.", "info");
+          return;
+        }
+        /* For rejected / archived — allow re-request */
+      }
+
+      const now = Date.now();
+      await set(
+        ref(db, `subjectEnrollments/${subjectId}/${state.currentUser.uid}`),
+        {
+          status: "pending",
+          requestedAt: now,
+          reviewedAt: null,
+          reviewedBy: null,
+          studentGrade: state.currentUserData.grade || "",
+          studentSection: state.currentUserData.section || "",
+          studentName: state.currentUserData.name || "",
+          studentId:
+            state.currentUserData.studentId ||
+            state.currentUserData.schoolId ||
+            "",
+          studentEmail: state.currentUserData.email || "",
+        },
+      );
+
+      await push(ref(db, "auditLog"), {
+        action: "subject_enrollment_requested",
+        subjectId,
+        userId: state.currentUser.uid,
+        ts: now,
+      });
+
+      const subjectName = subjSnap.val().name || "this subject";
+      toast(
+        `Join request sent for "${subjectName}". Waiting for teacher approval.`,
+        "success",
+      );
+
+      /* Refresh the subjects list to show updated status */
+      loadStudentSubjects();
+    } catch (err) {
+      console.error("Error requesting subject join:", err);
+      toast("Failed to send join request. Please try again.", "error");
+    }
+  };
 
   /* ---- Rescan button ---- */
   window.appRescan = () => {

@@ -27,16 +27,22 @@ import {
  * Sets up authentication: login/register forms, auth-state listener,
  * and logout buttons. Calls the appropriate callback on login.
  */
-export function setupAuth(onInstructorLogin, onStudentLogin) {
+export function setupAuth(onInstructorLogin, onStudentLogin, onAdminLogin) {
   let academicStructure = null;
   const roleSelect = $("#reg-role");
   const gradeGroup = $("#reg-grade-group");
   const sectionGroup = $("#reg-section-group");
   const gradeSelect = $("#reg-grade");
   const sectionSelect = $("#reg-section");
+  const studentTypeGroup = $("#reg-student-type-group");
+  const studentTypeSelect = $("#reg-student-type");
+  const transferFromGroup = $("#reg-transfer-from-group");
+  const transferFromInput = $("#reg-transfer-from");
+  const parentLinkGroup = $("#reg-parent-link-group");
+  const parentLinkInput = $("#reg-parent-link");
 
-  const loadAcademicStructure = async () => {
-    if (academicStructure) return academicStructure;
+  const loadAcademicStructure = async (force = false) => {
+    if (!force && academicStructure) return academicStructure;
     academicStructure = await fetchAcademicStructure();
     return academicStructure;
   };
@@ -45,6 +51,11 @@ export function setupAuth(onInstructorLogin, onStudentLogin) {
     const current = gradeSelect.value;
     const grades = getGradeOptions(structure);
     gradeSelect.innerHTML = '<option value="">Select grade</option>';
+    if (!grades.length) {
+      gradeSelect.innerHTML =
+        '<option value="">No grade levels configured</option>';
+      return;
+    }
     grades.forEach((grade) => {
       const opt = document.createElement("option");
       opt.value = grade;
@@ -57,6 +68,11 @@ export function setupAuth(onInstructorLogin, onStudentLogin) {
   const renderSectionOptions = (structure, grade, preferredSection = "") => {
     const sections = getSectionOptions(structure, grade);
     sectionSelect.innerHTML = '<option value="">Select section</option>';
+    if (grade && !sections.length) {
+      sectionSelect.innerHTML =
+        '<option value="">No sections assigned to this grade</option>';
+      return;
+    }
     sections.forEach((section) => {
       const opt = document.createElement("option");
       opt.value = section;
@@ -70,15 +86,27 @@ export function setupAuth(onInstructorLogin, onStudentLogin) {
 
   const syncStudentAcademicFields = (role) => {
     const isStudent = role === "student";
+    const isParent = role === "parent";
     gradeGroup.style.display = isStudent ? "" : "none";
     sectionGroup.style.display = isStudent ? "" : "none";
     gradeSelect.required = isStudent;
     sectionSelect.required = isStudent;
 
+    studentTypeGroup.style.display = isStudent ? "" : "none";
+    studentTypeSelect.required = isStudent;
+    parentLinkGroup.style.display = isParent ? "" : "none";
+
+    const isTransferee = studentTypeSelect.value === "transferee";
+    transferFromGroup.style.display = isStudent && isTransferee ? "" : "none";
+
     if (!isStudent) {
       gradeSelect.value = "";
       sectionSelect.innerHTML = '<option value="">Select section</option>';
+      studentTypeSelect.value = "";
+      transferFromInput.value = "";
     }
+
+    if (!isParent) parentLinkInput.value = "";
   };
 
   loadAcademicStructure()
@@ -101,6 +129,10 @@ export function setupAuth(onInstructorLogin, onStudentLogin) {
     renderSectionOptions(structure, gradeSelect.value, sectionSelect.value);
   });
 
+  studentTypeSelect.addEventListener("change", () => {
+    syncStudentAcademicFields(roleSelect.value);
+  });
+
   gradeSelect.addEventListener("change", async () => {
     const structure = await loadAcademicStructure();
     renderSectionOptions(structure, gradeSelect.value);
@@ -118,12 +150,23 @@ export function setupAuth(onInstructorLogin, onStudentLogin) {
         state.currentUserData = snap.val();
         state.currentRole = state.currentUserData.role;
 
-        if (state.currentRole === "instructor") {
+        if (state.currentRole === "admin") {
+          showPage("admin-page");
+          showSection("admin-sections", $("#admin-page"));
+          $("#admin-user-name").textContent =
+            state.currentUserData.name || user.email;
+          onAdminLogin?.();
+        } else if (state.currentRole === "instructor") {
           showPage("instructor-page");
           showSection("inst-dashboard", $("#instructor-page"));
           $("#inst-user-name").textContent =
             state.currentUserData.name || user.email;
           onInstructorLogin();
+        } else if (state.currentRole === "parent") {
+          showPage("parent-page");
+          showSection("parent-dashboard", $("#parent-page"));
+          $("#parent-user-name").textContent =
+            state.currentUserData.name || user.email;
         } else {
           state.currentUserData.approvalStatus =
             state.currentUserData.approvalStatus || "approved";
@@ -198,18 +241,26 @@ export function setupAuth(onInstructorLogin, onStudentLogin) {
     const role = $("#reg-role").value;
     const grade = gradeSelect.value;
     const section = sectionSelect.value;
+    const studentType = studentTypeSelect.value;
+    const transferFrom = transferFromInput.value.trim();
     const pass = $("#reg-password").value;
     try {
       let academicPayload = {};
       if (role === "student") {
-        const structure = await loadAcademicStructure();
+        const structure = await loadAcademicStructure(true);
         const validation = validateGradeSection(structure, grade, section);
         if (!validation.valid) throw new Error(validation.reason);
+        if (!studentType) throw new Error("Student type is required.");
+        if (studentType === "transferee" && !transferFrom) {
+          throw new Error("Previous school is required for transferees.");
+        }
         academicPayload = {
           grade,
           section,
           approvalStatus: "pending",
           approvalRequestedAt: Date.now(),
+          studentType,
+          transferFrom: transferFrom || "",
         };
       }
 
@@ -231,6 +282,8 @@ export function setupAuth(onInstructorLogin, onStudentLogin) {
   });
 
   /* ---------- Logout ---------- */
-  $("#inst-logout").addEventListener("click", () => signOut(auth));
-  $("#stu-logout").addEventListener("click", () => signOut(auth));
+  $("#admin-logout")?.addEventListener("click", () => signOut(auth));
+  $("#inst-logout")?.addEventListener("click", () => signOut(auth));
+  $("#stu-logout")?.addEventListener("click", () => signOut(auth));
+  $("#parent-logout")?.addEventListener("click", () => signOut(auth));
 }
