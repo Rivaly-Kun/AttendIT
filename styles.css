@@ -861,61 +861,83 @@ body {
   text-align: right;
 }
 
-/* ========== RESPONSIVE ========== */
-@media (max-width: 768px) {
-  .sidebar {
-    width: 64px;
-  }
-  .sidebar-brand span,
-  .nav-item span,
-  .user-details {
-    display: none;
-  }
-  .sidebar-brand {
-    justify-content: center;
-    padding: 16px;
-  }
-  .nav-item {
-    justify-content: center;
-    padding: 12px;
-    margin: 2px 4px;
-  }
-  .sidebar-footer {
-    justify-content: center;
-    padding: 12px;
-  }
-  .user-info {
-    gap: 0;
-  }
-  .btn-logout {
-    margin-left: 0;
-  }
-  .main-content {
-    margin-left: 64px;
-    padding: 20px;
-  }
-  .stats-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-  .filter-bar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .schedule-row {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .schedule-time {
-    text-align: left;
-  }
+/* ========== PARENT DASHBOARD LAYOUT ========== */
+.parent-layout {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
 }
-@media (max-width: 480px) {
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-  .cards-grid {
-    grid-template-columns: 1fr;
-  }
+.parent-child-panel {
+  width: 280px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.parent-child-panel .panel-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.parent-child-panel .panel-header h3 {
+  font-size: 15px;
+  font-weight: 600;
+}
+.parent-child-list {
+  padding: 8px;
+}
+.parent-link-form {
+  padding: 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.parent-link-form label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.parent-overview {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ========== INVITE CODE PANEL ========== */
+.invite-code-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.invite-code-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.invite-code-value {
+  font-size: 18px;
+  font-weight: 700;
+  font-family: monospace;
+  color: var(--primary);
+  margin: 4px 0;
+}
+.invite-code-hint {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* ========== MOBILE HEADER (hidden on desktop) ========== */
+.mobile-header {
+  display: none;
+}
+
+/* ========== SIDEBAR OVERLAY (hidden on desktop) ========== */
+.sidebar-overlay {
+  display: none;
 }
 
 /* ========== ENROLLMENT / MANAGE STUDENTS ========== */
@@ -1256,24 +1278,462 @@ body {
   accent-color: var(--primary);
 }
 
+/* ========== ADMIN RESPONSIVE ========== */
 @media (max-width: 768px) {
   .admin-section-layout {
     grid-template-columns: 1fr;
   }
   .inline-form {
-    align-items: stretch;
     flex-direction: column;
+    align-items: stretch;
   }
   .inline-form .btn {
     justify-content: center;
   }
   .admin-list-row,
   .grade-assignment-header {
-    align-items: stretch;
     flex-direction: column;
+    align-items: stretch;
   }
   .admin-list-row .action-btns {
     justify-content: flex-start;
+  }
+}
+
+/* ========== COMPREHENSIVE RESPONSIVE ========== */
+
+/* ---------- TABLET (max-width: 768px) ---------- */
+@media (max-width: 768px) {
+  /* Mobile top header bar */
+  .mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 16px;
+    gap: 12px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  }
+  .hamburger-btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: var(--primary-light);
+    color: var(--primary);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    transition: var(--transition);
+    flex-shrink: 0;
+  }
+  .hamburger-btn:hover {
+    background: var(--primary);
+    color: #fff;
+  }
+  .mobile-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--primary);
+  }
+  .mobile-brand i {
+    font-size: 20px;
+  }
+  .mobile-header-spacer {
+    width: 40px;
+    flex-shrink: 0;
+  }
+
+  /* Sidebar as off-canvas drawer */
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: var(--sidebar-width);
+    height: 100vh;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 300;
+    box-shadow: none;
+  }
+  .sidebar.open {
+    transform: translateX(0);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Overlay behind open sidebar */
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 250;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    backdrop-filter: blur(2px);
+  }
+  .sidebar-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Main content takes full width */
+  .main-content {
+    margin-left: 0;
+    width: 100%;
+    padding: 20px 16px;
+  }
+
+  /* Page flex direction column for mobile header */
+  .page.active {
+    flex-direction: column;
+  }
+  #auth-page.active {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* Stats grid: 2 columns on tablet */
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .stats-grid.compact {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .stat-card {
+    padding: 16px;
+    gap: 12px;
+  }
+  .stat-icon {
+    width: 42px;
+    height: 42px;
+    font-size: 18px;
+    border-radius: 10px;
+  }
+  .stat-value {
+    font-size: 20px;
+  }
+
+  /* Cards grid: single column */
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Section header stacking */
+  .section-header {
+    margin-bottom: 20px;
+  }
+  .section-header h2 {
+    font-size: 20px;
+  }
+
+  /* Filter bar stacking */
+  .filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .filter-bar .form-select,
+  .filter-bar .form-input {
+    width: 100%;
+  }
+  .filter-bar .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Table responsiveness: horizontal scroll */
+  .card-body:has(.data-table) {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 12px;
+  }
+  .data-table {
+    min-width: 560px;
+  }
+  .data-table thead th {
+    padding: 10px 12px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+  .data-table tbody td {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  /* Monitor controls */
+  .monitor-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .monitor-controls .form-select {
+    width: 100%;
+  }
+
+  /* QR code area */
+  .qr-card {
+    padding: 20px;
+    width: 100%;
+    max-width: 100%;
+  }
+  #qr-code-container canvas,
+  #qr-code-container img {
+    max-width: 200px !important;
+    max-height: 200px !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Scanner container */
+  .scanner-container {
+    max-width: 100%;
+  }
+
+  /* Modal */
+  .modal-overlay {
+    padding: 12px;
+  }
+  .modal {
+    max-width: 100%;
+    max-height: 85vh;
+    border-radius: var(--radius);
+  }
+  .modal-header {
+    padding: 16px;
+  }
+  .modal-body {
+    padding: 16px;
+  }
+
+  /* Toast */
+  .toast-container {
+    top: auto;
+    bottom: 16px;
+    right: 12px;
+    left: 12px;
+  }
+  .toast {
+    min-width: auto;
+    width: 100%;
+    font-size: 13px;
+    padding: 12px 16px;
+  }
+
+  /* Schedule rows */
+  .schedule-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .schedule-time {
+    text-align: left;
+  }
+
+  /* Subject summary rows */
+  .subject-summary-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .attendance-bar {
+    width: 100%;
+  }
+  .attendance-bar-wrap {
+    width: 100%;
+  }
+
+  /* Parent dashboard layout */
+  .parent-layout {
+    flex-direction: column;
+    gap: 16px;
+  }
+  .parent-child-panel {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+  .parent-overview {
+    width: 100%;
+  }
+
+  /* Approvals */
+  .approval-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+  }
+  .approval-student {
+    width: 100%;
+  }
+  .approval-row .action-btns {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .approval-block-header {
+    padding: 16px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .subject-approval-grid {
+    grid-template-columns: 1fr;
+    padding: 16px;
+    gap: 12px;
+  }
+
+  /* Invite code panel */
+  .invite-code-panel {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .invite-code-panel .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Enrolled student rows */
+  .enrolled-student-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .enrolled-student-row .action-btns {
+    align-self: flex-end;
+  }
+
+  /* Action buttons wrap */
+  .action-btns {
+    flex-wrap: wrap;
+  }
+}
+
+/* ---------- PHONE (max-width: 480px) ---------- */
+@media (max-width: 480px) {
+  /* Single column stats */
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .stats-grid.compact {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Stat cards smaller */
+  .stat-card {
+    padding: 14px;
+  }
+  .stat-value {
+    font-size: 18px;
+  }
+
+  /* Auth page */
+  .auth-container {
+    padding: 16px;
+  }
+  .auth-brand h1 {
+    font-size: 22px;
+  }
+  .brand-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    font-size: 24px;
+  }
+  .auth-form {
+    padding: 16px;
+  }
+
+  /* Section header */
+  .section-header h2 {
+    font-size: 18px;
+  }
+  .section-header .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Cards */
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
+  .card-header {
+    padding: 14px 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .card-body {
+    padding: 14px 16px;
+  }
+
+  /* Subject card */
+  .subject-card {
+    padding: 16px;
+  }
+  .subject-card .subject-actions {
+    flex-wrap: wrap;
+  }
+  .subject-card .subject-actions .btn {
+    flex: 1;
+    min-width: 0;
+    justify-content: center;
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+
+  /* Tables need more horizontal scroll space */
+  .data-table {
+    min-width: 480px;
+  }
+
+  /* Checkbox grid for admin */
+  .checkbox-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Buttons smaller */
+  .btn {
+    padding: 9px 16px;
+    font-size: 13px;
+    gap: 6px;
+  }
+  .btn-sm {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  /* Main content tighter padding */
+  .main-content {
+    padding: 16px 12px;
+  }
+
+  /* Approval cards */
+  .subject-approval-grid {
+    padding: 12px;
+    gap: 10px;
+  }
+  .approval-list.compact .approval-row {
+    padding: 10px 12px;
+  }
+
+  /* Student approval message */
+  .student-approval-message {
+    flex-direction: column;
+    gap: 8px;
   }
 }
 

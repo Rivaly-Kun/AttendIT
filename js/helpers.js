@@ -5,6 +5,45 @@
 export const $ = (sel) => document.querySelector(sel);
 export const $$ = (sel) => document.querySelectorAll(sel);
 
+/* ---- Mobile sidebar drawer toggle ---- */
+export function setupMobileSidebar() {
+  // Hamburger open
+  document.querySelectorAll(".hamburger-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const page = btn.closest(".page");
+      if (!page) return;
+      const sidebar = page.querySelector(".sidebar");
+      const overlay = page.querySelector(".sidebar-overlay");
+      if (sidebar) sidebar.classList.add("open");
+      if (overlay) overlay.classList.add("active");
+    });
+  });
+
+  // Overlay close
+  document.querySelectorAll(".sidebar-overlay").forEach((overlay) => {
+    overlay.addEventListener("click", () => {
+      const page = overlay.closest(".page");
+      if (!page) return;
+      const sidebar = page.querySelector(".sidebar");
+      sidebar?.classList.remove("open");
+      overlay.classList.remove("active");
+    });
+  });
+
+  // Close sidebar when a nav item is clicked (mobile UX)
+  document.querySelectorAll(".nav-item").forEach((item) => {
+    item.addEventListener("click", () => {
+      if (window.innerWidth > 768) return;
+      const page = item.closest(".page");
+      if (!page) return;
+      const sidebar = page.querySelector(".sidebar");
+      const overlay = page.querySelector(".sidebar-overlay");
+      sidebar?.classList.remove("open");
+      overlay?.classList.remove("active");
+    });
+  });
+}
+
 export function show(el) {
   if (typeof el === "string") el = $(el);
   if (el) el.style.display = "";

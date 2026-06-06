@@ -5,7 +5,7 @@
    and kicks off authentication.
    ========================================================= */
 
-import { $, $$, showSection, closeModal, toast } from "./helpers.js";
+import { $, $$, showSection, closeModal, toast, setupMobileSidebar } from "./helpers.js";
 import state from "./state.js";
 import { setupAuth } from "./auth.js";
 import { loadSubjects, setupSubjectListeners } from "./subjects.js";
@@ -116,6 +116,7 @@ setupReportListeners();
 setupStudentListeners();
 setupApprovalListeners();
 setupAdminListeners();
+setupMobileSidebar();
 
 /* ===========================================================
    LEGACY API COMPATIBILITY
