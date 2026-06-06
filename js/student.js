@@ -241,6 +241,77 @@ async function loadStudentSubjects() {
 }
 
 /* ===========================================================
+   REQUEST TO JOIN A SUBJECT  ← NEW: was never implemented
+   Students click "Request Join" or "Request Again"; this writes
+   a pending record into subjectEnrollments so the teacher can
+   approve or reject it from their dashboard.
+   =========================================================== */
+async function requestSubjectJoin(subjId) {
+  try {
+    // Guard: account must be approved first
+    const approvalStatus = state.currentUserData?.approvalStatus || "approved";
+    if (approvalStatus !== "approved") {
+      toast(
+        "Your account must be approved by a teacher before you can request to join a class.",
+        "error",
+      );
+      return;
+    }
+
+    // Check current state of this enrollment slot
+    const existingSnap = await get(
+      ref(db, `subjectEnrollments/${subjId}/${state.currentUser.uid}`),
+    );
+    if (existingSnap.exists()) {
+      const currentStatus = existingSnap.val().status;
+      if (currentStatus === "approved") {
+        toast("You are already enrolled in this class.", "info");
+        return;
+      }
+      if (currentStatus === "pending") {
+        toast(
+          "You already have a pending request for this class. Please wait for your teacher to review it.",
+          "info",
+        );
+        return;
+      }
+      // If rejected or anything else, fall through and re-submit
+    }
+
+    // Write the join request
+    await set(
+      ref(db, `subjectEnrollments/${subjId}/${state.currentUser.uid}`),
+      {
+        status: "pending",
+        requestedAt: Date.now(),
+        studentId: state.currentUserData?.studentId || "",
+        studentName: state.currentUserData?.name || "",
+        grade: state.currentUserData?.grade || "",
+        section: state.currentUserData?.section || "",
+        userId: state.currentUser.uid,
+      },
+    );
+
+    // Audit log so the teacher's activity feed picks it up
+    await push(ref(db, "auditLog"), {
+      action: "subject_join_requested",
+      subjectId: subjId,
+      userId: state.currentUser.uid,
+      studentName: state.currentUserData?.name || "",
+      ts: Date.now(),
+    });
+
+    toast("Join request sent! Waiting for your teacher to approve.", "success");
+
+    // Refresh the subject list so the button changes to "Pending"
+    loadStudentSubjects();
+  } catch (err) {
+    toast(err.message || "Failed to send join request.", "error");
+    console.error(err);
+  }
+}
+
+/* ===========================================================
    STUDENT SCHEDULE
    =========================================================== */
 async function loadStudentSchedule() {
@@ -262,10 +333,12 @@ async function loadStudentSchedule() {
     : {};
   const entries = [];
   for (const [subjId, subj] of Object.entries(subjSnap.val())) {
-    const subjectRequest = subjectEnrollments?.[subjId]?.[state.currentUser.uid];
+    const subjectRequest =
+      subjectEnrollments?.[subjId]?.[state.currentUser.uid];
     const legacyEnrollSnap = await get(
       ref(db, `enrollments/${subjId}/${state.currentUser.uid}`),
     );
+    // Only show in schedule if teacher has approved the request (or legacy enrollment exists)
     const isApproved =
       subjectRequest?.status === "approved" || legacyEnrollSnap.exists();
     if (!isApproved) continue;
@@ -289,10 +362,18 @@ async function loadStudentSchedule() {
   entries.forEach((entry) => {
     const row = document.createElement("div");
     row.className = "schedule-row";
+    const meta = [
+      entry.code,
+      entry.grade && entry.section
+        ? `${entry.grade} Section ${entry.section}`
+        : "",
+    ]
+      .filter(Boolean)
+      .join(" \u2022 ");
     row.innerHTML = `
       <div class="schedule-main">
         <span class="schedule-subject">${escHtml(entry.name)}</span>
-        <span class="schedule-meta">${escHtml(entry.code)}${entry.code ? " • " : ""}${escHtml(entry.grade && entry.section ? `${entry.grade} Section ${entry.section}` : "")}</span>
+        <span class="schedule-meta">${escHtml(meta)}</span>
       </div>
       <span class="schedule-time">${escHtml(entry.schedule)}</span>`;
     container.appendChild(row);
@@ -461,15 +542,35 @@ async function processQrScan(data) {
     if (!state.currentUserData)
       throw new Error("User data not found. Please log in again.");
 
-    /* 7. Enrollment check */
-    const enrollCheck = await get(
-      ref(db, `enrollments/${session.subjectId}/${state.currentUser.uid}`),
-    );
-    if (!enrollCheck.exists()) {
+    /* 7. Enrollment check — accepts both the new request-based path
+          (subjectEnrollments) and the legacy path (enrollments).
+          FIX: original code only checked the legacy path, so students
+          who joined via Request Join could never scan in. */
+    const [legacyEnrollSnap, newEnrollSnap] = await Promise.all([
+      get(ref(db, `enrollments/${session.subjectId}/${state.currentUser.uid}`)),
+      get(
+        ref(
+          db,
+          `subjectEnrollments/${session.subjectId}/${state.currentUser.uid}`,
+        ),
+      ),
+    ]);
+
+    const isEnrolled =
+      legacyEnrollSnap.exists() ||
+      (newEnrollSnap.exists() && newEnrollSnap.val().status === "approved");
+
+    if (!isEnrolled) {
       const subjSnap = await get(ref(db, `subjects/${session.subjectId}`));
       const subjName = subjSnap.exists() ? subjSnap.val().name : "this class";
+      // Give a more helpful message if they have a pending request
+      if (newEnrollSnap.exists() && newEnrollSnap.val().status === "pending") {
+        throw new Error(
+          `Your request to join "${subjName}" is still pending. Wait for your teacher to approve it.`,
+        );
+      }
       throw new Error(
-        `You are not enrolled in "${subjName}". Ask your instructor to add you first.`,
+        `You are not enrolled in "${subjName}". Request to join the class first and wait for teacher approval.`,
       );
     }
 
@@ -537,90 +638,12 @@ export function setupStudentListeners() {
       renderHistoryTable(window._studentHistoryRows, window._subjects || {});
   });
 
-  /* ---- Request to join a subject ---- */
-  window.appRequestSubjectJoin = async (subjectId) => {
-    try {
-      if (!state.currentUser || !state.currentUserData) {
-        toast("You must be logged in to request enrollment.", "error");
-        return;
-      }
-
-      const approvalStatus = state.currentUserData?.approvalStatus || "approved";
-      if (approvalStatus !== "approved") {
-        toast(
-          "Your account must be approved before you can request to join subjects.",
-          "error",
-        );
-        return;
-      }
-
-      /* Check if subject still exists */
-      const subjSnap = await get(ref(db, `subjects/${subjectId}`));
-      if (!subjSnap.exists()) {
-        toast("This subject no longer exists.", "error");
-        return;
-      }
-
-      /* Check for existing enrollment request */
-      const existingSnap = await get(
-        ref(db, `subjectEnrollments/${subjectId}/${state.currentUser.uid}`),
-      );
-      if (existingSnap.exists()) {
-        const existing = existingSnap.val();
-        if (existing.status === "pending") {
-          toast("You already have a pending request for this subject.", "info");
-          return;
-        }
-        if (existing.status === "approved") {
-          toast("You are already enrolled in this subject.", "info");
-          return;
-        }
-        /* For rejected / archived — allow re-request */
-      }
-
-      const now = Date.now();
-      await set(
-        ref(db, `subjectEnrollments/${subjectId}/${state.currentUser.uid}`),
-        {
-          status: "pending",
-          requestedAt: now,
-          reviewedAt: null,
-          reviewedBy: null,
-          studentGrade: state.currentUserData.grade || "",
-          studentSection: state.currentUserData.section || "",
-          studentName: state.currentUserData.name || "",
-          studentId:
-            state.currentUserData.studentId ||
-            state.currentUserData.schoolId ||
-            "",
-          studentEmail: state.currentUserData.email || "",
-        },
-      );
-
-      await push(ref(db, "auditLog"), {
-        action: "subject_enrollment_requested",
-        subjectId,
-        userId: state.currentUser.uid,
-        ts: now,
-      });
-
-      const subjectName = subjSnap.val().name || "this subject";
-      toast(
-        `Join request sent for "${subjectName}". Waiting for teacher approval.`,
-        "success",
-      );
-
-      /* Refresh the subjects list to show updated status */
-      loadStudentSubjects();
-    } catch (err) {
-      console.error("Error requesting subject join:", err);
-      toast("Failed to send join request. Please try again.", "error");
-    }
-  };
-
   /* ---- Rescan button ---- */
   window.appRescan = () => {
     hide("#scan-result");
     startScanner();
   };
+
+  /* ---- Request Join button (called from inline onclick in subject list) ---- */
+  window.appRequestSubjectJoin = (subjId) => requestSubjectJoin(subjId);
 }
