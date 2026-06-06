@@ -27,9 +27,11 @@ import {
  * Sets up authentication: login/register forms, auth-state listener,
  * and logout buttons. Calls the appropriate callback on login.
  */
-export function setupAuth(onInstructorLogin, onStudentLogin, onAdminLogin) {
+export function setupAuth(onInstructorLogin, onStudentLogin, onAdminLogin, onParentLogin) {
   let academicStructure = null;
   const roleSelect = $("#reg-role");
+  const studentIdGroup = $("#reg-student-id-group");
+  const studentIdInput = $("#reg-student-id");
   const gradeGroup = $("#reg-grade-group");
   const sectionGroup = $("#reg-section-group");
   const gradeSelect = $("#reg-grade");
@@ -87,6 +89,14 @@ export function setupAuth(onInstructorLogin, onStudentLogin, onAdminLogin) {
   const syncStudentAcademicFields = (role) => {
     const isStudent = role === "student";
     const isParent = role === "parent";
+
+    // Hide School / Employee ID for parents
+    if (studentIdGroup) studentIdGroup.style.display = isParent ? "none" : "";
+    if (studentIdInput) {
+      studentIdInput.required = !isParent;
+      if (isParent) studentIdInput.value = "";
+    }
+
     gradeGroup.style.display = isStudent ? "" : "none";
     sectionGroup.style.display = isStudent ? "" : "none";
     gradeSelect.required = isStudent;
@@ -167,6 +177,7 @@ export function setupAuth(onInstructorLogin, onStudentLogin, onAdminLogin) {
           showSection("parent-dashboard", $("#parent-page"));
           $("#parent-user-name").textContent =
             state.currentUserData.name || user.email;
+          onParentLogin?.();
         } else {
           state.currentUserData.approvalStatus =
             state.currentUserData.approvalStatus || "approved";
@@ -237,8 +248,8 @@ export function setupAuth(onInstructorLogin, onStudentLogin, onAdminLogin) {
     errEl.classList.remove("visible");
     const name = $("#reg-name").value.trim();
     const email = $("#reg-email").value.trim();
-    const sid = $("#reg-student-id").value.trim();
     const role = $("#reg-role").value;
+    const sid = role !== "parent" ? $("#reg-student-id").value.trim() : "";
     const grade = gradeSelect.value;
     const section = sectionSelect.value;
     const studentType = studentTypeSelect.value;
@@ -274,7 +285,59 @@ export function setupAuth(onInstructorLogin, onStudentLogin, onAdminLogin) {
         ...academicPayload,
         createdAt: Date.now(),
       });
-      toast("Account created!", "success");
+
+      // Auto-link child if parent provided a code during registration
+      if (role === "parent" && parentLinkInput.value.trim()) {
+        try {
+          const linkCode = parentLinkInput.value.trim().toUpperCase();
+          let childUid = null;
+          let childData = null;
+
+          // Try invite code lookup
+          const inviteSnap = await get(ref(db, `inviteCodes/${linkCode}`));
+          if (inviteSnap.exists()) {
+            childUid = inviteSnap.val().uid;
+            const uSnap = await get(ref(db, `users/${childUid}`));
+            if (uSnap.exists()) childData = uSnap.val();
+          }
+
+          // Try school ID lookup
+          if (!childUid) {
+            const usersSnap = await get(ref(db, "users"));
+            if (usersSnap.exists()) {
+              for (const [uid, ud] of Object.entries(usersSnap.val())) {
+                if (
+                  ud.role === "student" &&
+                  ud.studentId &&
+                  ud.studentId.toUpperCase() === linkCode
+                ) {
+                  childUid = uid;
+                  childData = ud;
+                  break;
+                }
+              }
+            }
+          }
+
+          if (childUid && childData) {
+            await set(ref(db, `parentLinks/${cred.user.uid}/${childUid}`), {
+              childName: childData.name || "",
+              childStudentId: childData.studentId || "",
+              childGrade: childData.grade || "",
+              childSection: childData.section || "",
+              linkedAt: Date.now(),
+            });
+            toast("Account created & child linked!", "success");
+          } else {
+            toast("Account created! Could not find child with that code.", "info");
+          }
+        } catch (linkErr) {
+          console.error("Auto-link failed:", linkErr);
+          toast("Account created! Child linking failed — try again from dashboard.", "info");
+        }
+      } else {
+        toast("Account created!", "success");
+      }
     } catch (err) {
       errEl.textContent = err.message.replace("Firebase: ", "");
       errEl.classList.add("visible");

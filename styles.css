@@ -930,6 +930,64 @@ body {
   line-height: 1.4;
 }
 
+/* ========== PARENT CHILD LIST ITEMS ========== */
+.parent-child-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+  margin-bottom: 4px;
+}
+.parent-child-item:hover {
+  background: var(--bg);
+}
+.parent-child-item.active {
+  background: var(--primary-light);
+}
+.parent-child-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+.parent-child-info > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.parent-child-info strong {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.parent-child-info span {
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.parent-child-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--primary-light);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.parent-child-item.active .parent-child-avatar {
+  background: var(--primary);
+  color: #fff;
+}
+
 /* ========== MOBILE HEADER (hidden on desktop) ========== */
 .mobile-header {
   display: none;

@@ -24,6 +24,11 @@ import {
   initScanSection,
   setupStudentListeners,
 } from "./student.js";
+import {
+  setupParentListeners,
+  loadParentDashboard,
+  loadStudentInviteCode,
+} from "./parent.js";
 
 /* ===========================================================
    INSTRUCTOR DASHBOARD INIT
@@ -40,6 +45,21 @@ function initInstructorDashboard() {
    =========================================================== */
 function initAdminDashboard() {
   loadAdminSections();
+}
+
+/* ===========================================================
+   PARENT DASHBOARD INIT
+   =========================================================== */
+function initParentDashboard() {
+  loadParentDashboard();
+}
+
+/* ===========================================================
+   STUDENT DASHBOARD INIT WRAPPER
+   =========================================================== */
+function initStudentDashboardFull() {
+  initStudentDashboard();
+  loadStudentInviteCode();
 }
 
 /* ===========================================================
@@ -117,6 +137,7 @@ setupStudentListeners();
 setupApprovalListeners();
 setupAdminListeners();
 setupMobileSidebar();
+setupParentListeners();
 
 /* ===========================================================
    LEGACY API COMPATIBILITY
@@ -134,4 +155,4 @@ window.mgt.clearMarks = (...args) => {
 /* ===========================================================
    AUTHENTICATION (starts the app)
    =========================================================== */
-setupAuth(initInstructorDashboard, initStudentDashboard, initAdminDashboard);
+setupAuth(initInstructorDashboard, initStudentDashboardFull, initAdminDashboard, initParentDashboard);
